@@ -1,0 +1,251 @@
+# =====================================================================
+# 1. DATOS INICIALES
+# =====================================================================
+
+juegos = {
+    'G001': ['Eclipse Runner', 'PC', 'accion', 'T', True, 'NovaStudio'],
+    'G002': ['Puzzle Atlas', 'Switch', 'puzzle', 'E', False, 'BrightWorks'],
+    'G003': ['Sky Legends', 'PS5', 'aventura', 'T', True, 'OrionGames'],
+    'G004': ['Racing Pulse', 'PC', 'carreras', 'E', True, 'VelocityLab'],
+    'G005': ['Mystic Farm', 'Switch', 'simulacion', 'E', False, 'GreenSeed'],
+    'G006': ['Shadow Tactics', 'Xbox', 'estrategia', 'M', False, 'IronGate']
+}
+
+inventario = {
+    'G001': [9990, 7],
+    'G002': [19990, 0],
+    'G003': [42990, 3],
+    'G004': [14990, 5],
+    'G005': [17990, 9],
+    'G006': [39990, 2]
+}
+
+
+# =====================================================================
+# FUNCTIONS - OPCIONES DEL MENÚ
+# =====================================================================
+
+# Opción 1: Stock por plataforma
+def stock_plataforma(plataforma):
+    total_stock = 0
+    # Recorremos el diccionario juegos
+    for codigo, datos in juegos.items():
+        # datos[1] es la plataforma. Usamos .lower() para ignorar mayúsculas/minúsculas
+        if datos[1].lower() == plataforma.lower():
+            if codigo in inventario:
+                total_stock += inventario[codigo][1] # El segundo elemento [1] es el stock
+    print(f"El total de stock disponibles es: {total_stock}")
+
+
+# Opción 2: Búsqueda por rango de precio
+def busqueda_precio(p_min, p_max):
+    resultados = []
+    for codigo, datos_inv in inventario.items():
+        precio = datos_inv[0]
+        stock = datos_inv[1]
+        
+        # Filtramos por rango y que tenga stock disponible
+        if p_min <= precio <= p_max and stock > 0:
+            if codigo in juegos:
+                titulo = juegos[codigo][0]
+                resultados.append(f"{titulo}--{codigo}")
+                
+    if len(resultados) == 0:
+        print("No hay juegos en ese rango de precios.")
+    else:
+        # Se ordenan alfabéticamente por título automáticamente debido al formato "Titulo--Codigo"
+        resultados.sort()
+        print(f"Los juegos encontrados son: {resultados}")
+
+
+# Opción 3: Actualizar precio de juego
+def actualizar_precio(codigo, nuevo_precio):
+    codigo_upper = codigo.upper()
+    if codigo_upper in inventario:
+        inventario[codigo_upper][0] = nuevo_precio
+        return True
+    return False
+
+
+# Opción 5: Eliminar juego
+def eliminar_juego(codigo):
+    codigo_upper = codigo.upper()
+    if codigo_upper in juegos:
+        del juegos[codigo_upper]
+        if codigo_upper in inventario:
+            del inventario[codigo_upper]
+        return True
+    return False
+
+
+# =====================================================================
+# FUNCIONES DE VALIDACIÓN INDEPENDIENTES (Para Opción 4)
+# =====================================================================
+
+def validar_codigo(codigo):
+    if codigo.strip() == "" or codigo.upper() in juegos:
+        return False
+    return True
+
+def validar_titulo(titulo):
+    return titulo.strip() != ""
+
+def validar_plataforma(plataforma):
+    return plataforma.strip() != ""
+
+def validar_genero(genero):
+    return genero.strip() != ""
+
+def validar_clasificacion(clasificacion):
+    return clasificacion in ['E', 'T', 'M']
+
+def validar_multiplayer(multiplayer):
+    return multiplayer.lower() in ['s', 'n']
+
+def validar_editor(editor):
+    return editor.strip() != ""
+
+def validar_precio_input(precio_str):
+    try:
+        val = int(precio_str)
+        return val > 0
+    except ValueError:
+        return False
+
+def validar_stock_input(stock_str):
+    try:
+        val = int(stock_str)
+        return val >= 0
+    except ValueError:
+        return False
+
+
+# Función para agregar el juego una vez que todo es válido
+def agregar_juego(codigo, titulo, plataforma, genero, clasificacion, multiplayer, editor, precio, stock):
+    codigo_upper = codigo.upper()
+    if codigo_upper in juegos:
+        return False
+    
+    # Convertir respuesta 's'/'n' a Booleano
+    mp_bool = True if multiplayer.lower() == 's' else False
+    
+    # Guardamos en ambos diccionarios
+    juegos[codigo_upper] = [titulo, plataforma, genero, clasificacion, mp_bool, editor]
+    inventario[codigo_upper] = [int(precio), int(stock)]
+    return True
+
+
+# =====================================================================
+# 3. PROGRAMA PRINCIPAL (Menú Interactivo)
+# =====================================================================
+
+while True:
+    print("\n========== MENÚ PRINCIPAL ==========")
+    print("1. Stock por plataforma")
+    print("2. Búsqueda de juegos por rango de precio")
+    print("3. Actualizar precio de juego")
+    print("4. Agregar juego")
+    print("5. Eliminar juego")
+    print("6. Salir")
+    print("=====================================")
+    
+    opcion = input("Ingrese opción: ")
+    
+    if opcion == '1':
+        plataforma_buscar = input("Ingrese plataforma a consultar: ")
+        stock_plataforma(plataforma_buscar)
+        
+    elif opcion == '2':
+        # Manejo de excepciones solicitado para la opción 2
+        while True:
+            try:
+                p_min = int(input("Ingrese precio mínimo: "))
+                p_max = int(input("Ingrese precio máximo: "))
+                busqueda_precio(p_min, p_max)
+                break
+            except ValueError:
+                print("Debe ingresar valores enteros")
+                
+    elif opcion == '3':
+        while True:
+            cod = input("Ingrese código del juego: ")
+            nuevo_p = input("Ingrese nuevo precio: ")
+            
+            # Validación simple para asegurar que el nuevo precio sea un entero positivo
+            if nuevo_p.isdigit() and int(nuevo_p) > 0:
+                if actualizar_precio(cod, int(nuevo_p)):
+                    print("Precio actualizado")
+                else:
+                    print("El código no existe")
+            else:
+                print("Precio inválido (debe ser un entero mayor que cero).")
+                
+            resp = input("¿Desea actualizar otro precio (s/n)?: ").lower()
+            if resp == 'n':
+                break
+                
+    elif opcion == '4':
+        cod = input("Ingrese código del juego: ")
+        if not validar_codigo(cod):
+            print("Error en validación del código.")
+            continue # Vuelve al menú y no registra el juego
+            
+        tit = input("Ingrese título: ")
+        if not validar_titulo(tit):
+            print("Error en validación del título.")
+            continue #los continue son para que no se agrege nada 
+            
+        plat = input("Ingrese plataforma: ")
+        if not validar_plataforma(plat):
+            print("Error en validación de la plataforma.")
+            continue
+            
+        gen = input("Ingrese género: ")
+        if not validar_genero(gen):
+            print("Error en validación del género.")
+            continue
+            
+        clas = input("Ingrese clasificación (E, T o M): ")
+        if not validar_clasificacion(clas):
+            print("Error en validación de la clasificación.")
+            continue
+            
+        mult = input("¿Es multiplayer? (s/n): ")
+        if not validar_multiplayer(mult):
+            print("Error en validación de modo multijugador.")
+            continue
+            
+        edit = input("Ingrese editor: ")
+        if not validar_editor(edit):
+            print("Error en validación del editor.")
+            continue
+            
+        prec = input("Ingrese precio: ")
+        if not validar_precio_input(prec):
+            print("Error en validación del precio.")
+            continue
+            
+        stk = input("Ingrese stock: ")
+        if not validar_stock_input(stk):
+            print("Error en validación del stock.")
+            continue
+            
+        # Si pasó todos los 'continue', llama a la función final para registrar
+        if agregar_juego(cod, tit, plat, gen, clas, mult, edit, prec, stk):
+            print("Juego agregado")
+        else:
+            print("El código ya existe")
+            
+    elif opcion == '5':
+        cod_eliminar = input("Ingrese el código del juego que desea eliminar: ")
+        if eliminar_juego(cod_eliminar):
+            print("Juego eliminado")
+        else:
+            print("El código no existe")
+            
+    elif opcion == '6':
+        print("Programa finalizado.")
+        break
+        
+    else:
+        print("Debe seleccionar una opción válida")
